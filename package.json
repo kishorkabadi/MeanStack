@@ -1,0 +1,28 @@
+{
+  "name": "meanstack",
+  "version": "1.0.0",
+  "description": "backend for eshop",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kishorkabadi/MeanStack.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kishorkabadi/MeanStack/issues"
+  },
+  "homepage": "https://github.com/kishorkabadi/MeanStack#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.4.1",
+    "morgan": "^1.10.0",
+    "nodemon": "^3.0.1"
+  }
+}
