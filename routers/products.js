@@ -1,50 +1,38 @@
+const {Product} = require('../models/product');
 const express = require('express');
-const { Product } = require('../models/product')
 const { Category } = require('../models/category');
 const router = express.Router();
 const mongoose = require('mongoose');
 
-router.get(`/`, async (req, res) => {
-    let filter={}
+
+router.get(`/`, async (req, res) =>{
+    // localhost:3000/api/v1/products?categories=2342342,234234
+    let filter = {};
     if(req.query.categories)
     {
-        filter={category:req.query.categories.split(',')};
+         filter = {category: req.query.categories.split(',')}
     }
-    const productList = await Product.find(filter);
-    if (!productList) {
-        return res.status(500).json({ success: false })
-    }
-    res.send(productList)
-});
-router.get(`/:productId`, async (req, res) => {
 
-    const productList = await Product.findById(req.params.productId).populate('category');
-    if (!productList) {
-        return res.status(500).json({ success: false,message:'product not found' })
-    }
-    res.send(productList)
-});
-router.get(`/:id`, async (req, res) => {
+    const productList = await Product.find(filter).populate('category');
 
-    const productList = await Product.findById(req.params.id).select('name image');
-    // select particular column then specify in select and 
-    //if de select specific column mention like (minus)-columnName
-    if (!productList) {
-        return res.status(500).json({ success: false,message:'product not found' })
-    }
-    res.send(productList)
-});
-router.post(`/FindById`, async (req, res) => {
-    console.log(req.body.productId)
-    const productList = await Product.findById(req.body.productId);
-    if (!productList) {
-        return res.status(500).json({ success: false })
-    }
-    res.send(productList)
-});
-router.post(`/`, async (req, res) => {
+    if(!productList) {
+        res.status(500).json({success: false})
+    } 
+    res.send(productList);
+})
+
+router.get(`/:id`, async (req, res) =>{
+    const product = await Product.findById(req.params.id).populate('category');
+
+    if(!product) {
+        res.status(500).json({success: false})
+    } 
+    res.send(product);
+})
+
+router.post(`/`, async (req, res) =>{
     const category = await Category.findById(req.body.category);
-    if (!category) return res.status(400).send('Invalid Category')
+    if(!category) return res.status(400).send('Invalid Category')
 
     let product = new Product({
         name: req.body.name,
@@ -62,18 +50,18 @@ router.post(`/`, async (req, res) => {
 
     product = await product.save();
 
-    if (!product)
-        return res.status(500).send('The product cannot be created')
+    if(!product) 
+    return res.status(500).send('The product cannot be created')
 
     res.send(product);
 })
 
-router.put('/:id', async (req, res) => {
-    if (!mongoose.isValidObjectId(req.params.id)) {
-        return res.status(400).send('Invalid Product Id')
+router.put('/:id',async (req, res)=> {
+    if(!mongoose.isValidObjectId(req.params.id)) {
+       return res.status(400).send('Invalid Product Id')
     }
     const category = await Category.findById(req.body.category);
-    if (!category) return res.status(400).send('Invalid Category')
+    if(!category) return res.status(400).send('Invalid Category')
 
     const product = await Product.findByIdAndUpdate(
         req.params.id,
@@ -90,49 +78,46 @@ router.put('/:id', async (req, res) => {
             numReviews: req.body.numReviews,
             isFeatured: req.body.isFeatured,
         },
-        { new: true }
+        { new: true}
     )
 
-    if (!product)
-        return res.status(500).send('the product cannot be updated!')
+    if(!product)
+    return res.status(500).send('the product cannot be updated!')
 
     res.send(product);
-});
-router.delete('/:productId', (req, res) => {
-    Product.findByIdAndRemove(req.params.productId).then(product => {
-        if (product) {
-            return res.status(200).
-                json({ success: true, message: 'ther product is deleted' });
+})
+
+router.delete('/:id', (req, res)=>{
+    Product.findByIdAndRemove(req.params.id).then(product =>{
+        if(product) {
+            return res.status(200).json({success: true, message: 'the product is deleted!'})
+        } else {
+            return res.status(404).json({success: false , message: "product not found!"})
         }
-        else {
-            return res.status(404).
-                json({ success: false, message: 'product not found' });
-        }
-    }).catch(err => {
-        return res.status(400).
-            json({ success: false, error: err });
+    }).catch(err=>{
+       return res.status(500).json({success: false, error: err}) 
+    })
+})
+
+router.get(`/get/count`, async (req, res) =>{
+    const productCount = await Product.countDocuments((count) => count)
+
+    if(!productCount) {
+        res.status(500).json({success: false})
+    } 
+    res.send({
+        productCount: productCount
     });
-});
-router.get(`/Get/ProductCount`,async (req, res) => {
-    const proeductCount = await Product.countDocuments();
-    if (!proeductCount)
-        return res.status(500).json({success:false})
+})
 
-    res.send({ProductCount:proeductCount});
-});
-router.get(`/Get/Featured`,async (req, res) => {
-    const product = await Product.find({isFeatured:true});
-    if (!product)
-        return res.status(500).json({success:false})
+router.get(`/get/featured/:count`, async (req, res) =>{
+    const count = req.params.count ? req.params.count : 0
+    const products = await Product.find({isFeatured: true}).limit(+count);
 
-    res.send(product);
-});
-router.get(`/Get/Featured/:count`,async (req, res) => {
-    const count=req.params.count?req.params.count:0;
-    const product = await Product.find({isFeatured:true}).limit(count);
-    if (!product)
-        return res.status(500).json({success:false})
+    if(!products) {
+        res.status(500).json({success: false})
+    } 
+    res.send(products);
+})
 
-    res.send(product);
-});
-module.exports = router;
+module.exports =router;
